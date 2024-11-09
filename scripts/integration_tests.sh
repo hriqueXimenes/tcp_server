@@ -20,7 +20,7 @@ case "$OS" in
         OS_TYPE="" 
         ;;
     Darwin*)
-        OS_TYPE=""
+        OS_TYPE="_mac"
         ;;
     CYGWIN*|MINGW32*|MSYS*|MINGW*)
         OS_TYPE=".exe"
