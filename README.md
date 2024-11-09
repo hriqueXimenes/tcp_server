@@ -36,6 +36,8 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 
 ## Layout
 
+![alt text](https://freeimage.host/i/2IvxhHg)
+
 ```tree
 ├── README.md
 ├── .gitignore
