@@ -39,7 +39,6 @@ func TestNewServer_SUCCESS_Default_Values(t *testing.T) {
 	protocol := ""
 	maxConn := 0
 
-	//test default values
 	server, err := NewServer(ServerConfig{
 		Port:     port,
 		Addr:     address,
@@ -57,7 +56,6 @@ func TestNewServer_SUCCESS_Invalid_Addr(t *testing.T) {
 	address := "--invalid--"
 	protocol := "--invalid--"
 
-	//test default values
 	server, err := NewServer(ServerConfig{
 		Port:     port,
 		Addr:     address,

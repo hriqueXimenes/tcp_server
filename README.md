@@ -56,7 +56,7 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 │   └── common.go
 ├── scripts
 │   ├── build.sh
-│   └── integration_test.sh.sh
+│   └── integration_test.sh
 └── server
     ├── models
     │   ├── taskRequest.go

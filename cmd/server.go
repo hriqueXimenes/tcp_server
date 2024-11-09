@@ -33,6 +33,7 @@ func init() {
 }
 
 func serverCommandExecute(cmd *cobra.Command, args []string) {
+	// Get Flags
 	port, err := cmd.Flags().GetInt("port")
 	if err != nil {
 		fmt.Println("Error getting port:", err)
@@ -41,7 +42,7 @@ func serverCommandExecute(cmd *cobra.Command, args []string) {
 
 	maxConn, err := cmd.Flags().GetInt("maxconn")
 	if err != nil {
-		fmt.Println("Error getting port:", err)
+		fmt.Println("Error getting max connection count:", err)
 		return
 	}
 
@@ -51,6 +52,7 @@ func serverCommandExecute(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	// Initialize Logger
 	logger, err := zap.NewProduction()
 	if err != nil {
 		panic(err)
@@ -58,16 +60,19 @@ func serverCommandExecute(cmd *cobra.Command, args []string) {
 	defer logger.Sync()
 	sugar := logger.Sugar()
 
+	// Initialize Context
 	const loggerCtxKey = "logger"
 	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), loggerCtxKey, sugar))
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
+	// Initiate signal reader to perform graceful shutdown
 	go func() {
 		<-signalChan
 		cancel()
 	}()
 
+	// Create a new server instance
 	newServer, err := server.NewServer(server.ServerConfig{
 		Port:     port,
 		Addr:     address,
@@ -76,58 +81,69 @@ func serverCommandExecute(cmd *cobra.Command, args []string) {
 	})
 
 	if err != nil {
-		sugar.Errorw("Error to initiate server", "Error", err)
+		sugar.Errorw("Error initializing server", "Error", err)
 		return
 	}
 
+	// Start the TCP server
 	newServer.Start(ctx, OnReceiveSignal)
 }
 
 func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
+	// Record the start time for executing the task
 	startTime := time.Now()
 	result := models.TaskResult{}
 	const exitCodeError = -1
 
+	// Unmarshal the incoming request into a TaskRequest struct
 	var request models.TaskRequest
 	err := json.Unmarshal(req, &request)
 	if err != nil {
 		result.ExitCode = exitCodeError
-		result.Error = fmt.Sprint("Invalid request body: ", err)
+		result.Error = fmt.Sprintf("Invalid request body: %v", err)
 		return result
 	}
 
+	// Validate that a command is provided in the request
 	if request.Command == nil || len(request.Command) == 0 {
 		result.ExitCode = exitCodeError
-		result.Error = "command is mandatory"
+		result.Error = "Command is mandatory."
 		return result
 	}
 
+	// Set the command to be executed
 	result.Command = request.Command
+
+	// Create a context for the subprocess, with an optional timeout
 	subProcessCtx, cancel := context.WithCancel(context.Background())
 	if request.Timeout > 0 {
 		subProcessCtx, cancel = context.WithTimeout(ctx, time.Duration(request.Timeout)*time.Millisecond)
 	}
-
 	defer cancel()
 
+	// Execute the command with the given arguments and capture the output
 	cmd := exec.CommandContext(subProcessCtx, request.Command[0], request.Command[1:]...)
 	output, err := cmd.CombinedOutput()
 
+	// Calculate the duration of command execution
 	duration := time.Since(startTime).Milliseconds()
 
+	// Record the execution details in the result
 	result.ExecutedAt = startTime.UnixNano() / int64(time.Millisecond)
 	result.DurationMs = float64(duration)
 
+	// Handle timeout and execution errors
 	if subProcessCtx.Err() == context.DeadlineExceeded {
-		result.ExitCode = -1
+		result.ExitCode = exitCodeError
 		result.Error = "timeout exceeded"
 	} else if err != nil {
-		result.ExitCode = -1
+		result.ExitCode = exitCodeError
 		result.Error = fmt.Sprintf("Error executing command: %v", err)
 	} else {
 		result.ExitCode = 0
 	}
 
+	// Capture the output of the command execution
 	result.Output = string(output)
 
 	return result

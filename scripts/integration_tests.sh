@@ -104,7 +104,7 @@ else
     echo -e "${RED}-- > [ ] The server could not handle general commands such as echo${RESET}"
 fi
 
-OUTPUT=$(../build/sumologic_server${OS_TYPE} client -p ${PORT} -a 0.0.0.0 --script "../build/sumologic_server${OS_TYPE}" --script "await" --script "-t" --script "10000" -t 100)
+OUTPUT=$(../build/sumologic_server${OS_TYPE} client -p ${PORT} -a 0.0.0.0 --script "../build/sumologic_server${OS_TYPE}" --script "await" --script "-t" --script "10000" -t 1)
 if echo "$OUTPUT" | grep -q "timeout exceeded"; then
     echo -e "${GREEN}-- > [x] The server could handle a time out request successfully${RESET}"
 else

@@ -53,7 +53,8 @@ func NewServer(config ServerConfig) (*Server, error) {
 	return &newServer, nil
 }
 
-// Start will start a server listening following the given intructions.
+// Start initializes the TCP server to listen for incoming connections and handle them concurrently,
+// using the provided context and callback function for processing requests.
 func (server *Server) Start(ctx context.Context, callback func(ctx context.Context, req []byte) interface{}) {
 	logger, ok := ctx.Value("logger").(*zap.SugaredLogger)
 	if !ok {

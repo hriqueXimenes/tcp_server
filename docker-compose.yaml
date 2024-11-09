@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: hriqueximenes/sumologic:latest
+    image: hriqueximenes/sumologic:2.0.0
     build:
       context: .
       dockerfile: Dockerfile
