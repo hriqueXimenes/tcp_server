@@ -34,6 +34,14 @@ func NewServer(config ServerConfig) (*Server, error) {
 		config.MaxConn = 5
 	}
 
+	if config.Port <= 0 {
+		config.Port = 3000
+	}
+
+	if config.Addr == "" {
+		config.Addr = "0.0.0.0"
+	}
+
 	newServer := Server{
 		port:     config.Port,
 		addr:     config.Addr,

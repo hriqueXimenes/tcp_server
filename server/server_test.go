@@ -34,8 +34,8 @@ func TestNewServer_SUCCESS(t *testing.T) {
 }
 
 func TestNewServer_SUCCESS_Default_Values(t *testing.T) {
-	port := randomPort()
-	address := "localhost"
+	port := 0
+	address := ""
 	protocol := ""
 	maxConn := 0
 
@@ -46,9 +46,13 @@ func TestNewServer_SUCCESS_Default_Values(t *testing.T) {
 		MaxConn:  maxConn,
 	})
 
+	assert.Nil(t, err, "Error should be nil while creating a new server with valid configurations")
+
 	assert.Equal(t, "tcp", server.protocol, "The default protocol should've been assigned to TCP")
 	assert.Equal(t, 5, server.maxConn, "The default maxConn should've been assigned to 5")
-	assert.Nil(t, err, "Error should be nil while creating a new server with valid configurations")
+	assert.Equal(t, 3000, server.port, "The default port should've been assigned to 3000")
+	assert.Equal(t, "0.0.0.0", server.addr, "The default addr should've been assigned to 0.0.0.0")
+
 }
 
 func TestNewServer_SUCCESS_Invalid_Addr(t *testing.T) {
