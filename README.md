@@ -63,8 +63,8 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 A brief description of the layout:
 
 * `README.md` is a detailed description of the project.
-* `docker-compose.yaml` is to hold build outputs.
-* `Dockerfile` is to hold build outputs.
+* `docker-compose.yaml` a file to assist in creating the local environment and reduce compatibility issues.
+* `Dockerfile` template to create Docker images and facilitate the containerization of the application.
 * `build` is to hold build outputs.
 * `cmd` is where the files that manage the application's commands are located.
 * `common` is where auxiliary functions or language functions are wrapped in interfaces to facilitate unit testing
