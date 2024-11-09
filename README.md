@@ -89,6 +89,8 @@ The unit tests were primarily carried out within the "Server" component, which c
 The other components, such as CMD and Common, only implement the functionalities of the Server, and for this reason, they are only covered in the integration tests.
 A script was created to facilitate unit testing (particularly to test concurrency and timeout). You can run the script with the following command:
  ```bash
+    chmod -R 755 ./build ./scripts
+    
     cd ./scripts/
    ./integration_tests.sh
 ```
@@ -119,11 +121,11 @@ To install and configure the project, follow the steps below:
 go run main.go server -p 3000 -a 0.0.0.0 -m 5
 
 [Linux]
-chmod 777 ./build ./scripts
+chmod -R 755 ./build ./scripts
 ./build/sumologic_server server -p 3000 -a 0.0.0.0 -m 5
 
 [Mac]
-chmod 777 ./build ./scripts
+chmod -R 755 ./build ./scripts
 ./build/sumologic_server_mac server -p 3000 -a 0.0.0.0 -m 5
 
 [Windows]
