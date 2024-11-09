@@ -77,6 +77,24 @@ A brief description of the layout:
 * `scripts` contains scripts to build and test the project.
 * `server` where all the TCP server logic is present.
 
+## Tests
+
+Both unit and integration tests were conducted.
+
+The unit tests were primarily carried out within the "Server" component, which currently has over 95% coverage. You can check the current code coverage by running this command in your terminal:
+ ```bash
+   go test ./... -cover
+```
+
+The other components, such as CMD and Common, only implement the functionalities of the Server, and for this reason, they are only covered in the integration tests.
+A script was created to facilitate unit testing (particularly to test concurrency and timeout). You can run the script with the following command:
+ ```bash
+    cd ./scripts/
+   ./integration_tests.sh
+```
+This is an example of all integration tests successfully completed at the moment:
+![alt text](https://iili.io/2IvcPoX.png)
+
 ## Technologies Used
 
 - **Language**: Go 1.22.6
