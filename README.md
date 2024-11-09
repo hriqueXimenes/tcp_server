@@ -119,7 +119,12 @@ To install and configure the project, follow the steps below:
 go run main.go server -p 3000 -a 0.0.0.0 -m 5
 
 [Linux]
+chmod 777 ./build
 ./build/sumologic_server server -p 3000 -a 0.0.0.0 -m 5
+
+[Mac]
+chmod 777 ./build
+./build/sumologic_server_mac server -p 3000 -a 0.0.0.0 -m 5
 
 [Windows]
 ./build/sumologic_server.exe server -p 3000 -a 0.0.0.0 -m 5
@@ -134,7 +139,7 @@ docker-compose up
 [Running with GO]
 go run main.go client -p 3000 -a 0.0.0.0 --script sleep --script 1 -t 2000
 
-[Linux]
+[Linux || Mac]
 echo -e '{ "command": ["sleep","1"], "timeout": 2000 }' | nc 127.0.0.1 3000
 
 [Windows]
