@@ -2,7 +2,11 @@
 
 ## Description
 
-This project is part of the "take-home" phase for SumoLogic. In my attempt to join the software engineering team, I was tasked with creating a TCP server in Golang. I aimed to create a simple, testable, and easily readable project for the evaluators.
+The goal of this project is the creation of a TCP server in Golang.
+
+The server should receive calls and execute commands based on the information received from the client.
+
+Golang was used in the creation of this project, taking advantage of the language's features for creating goroutines/channels/contexts to better manage and control the different opened threads.
 
 I hope you like the solutions I applied, and I would be very happy to receive any feedback :)
 
