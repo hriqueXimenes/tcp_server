@@ -89,6 +89,8 @@ The unit tests were primarily carried out within the "Server" component, which c
 The other components, such as CMD and Common, only implement the functionalities of the Server, and for this reason, they are only covered in the integration tests.
 A script was created to facilitate unit testing (particularly to test concurrency and timeout). You can run the script with the following command:
  ```bash
+    chmod -R 755 ./build ./scripts
+    
     cd ./scripts/
    ./integration_tests.sh
 ```
@@ -115,33 +117,33 @@ To install and configure the project, follow the steps below:
 ```bash
 -p <port> -a <addr> -m <max-connections>
 
-[Running with GO]
+**[Running with GO]**
 go run main.go server -p 3000 -a 0.0.0.0 -m 5
 
-[Linux]
-chmod 777 ./build ./scripts
+**[Linux]**
+chmod -R 755 ./build ./scripts
 ./build/sumologic_server server -p 3000 -a 0.0.0.0 -m 5
 
-[Mac]
-chmod 777 ./build ./scripts
+**[Mac]**
+chmod -R 755 ./build ./scripts
 ./build/sumologic_server_mac server -p 3000 -a 0.0.0.0 -m 5
 
-[Windows]
+**[Windows]**
 ./build/sumologic_server.exe server -p 3000 -a 0.0.0.0 -m 5
 
-[Docker Compose]
-docker-compose up
+**[Docker Compose]**
+docker-compose up --build
 ```
 4. Perform requests
 ```bash
 -p <port> -a <addr> -t <timeout>
 
-[Running with GO]
+**[Running with GO]**
 go run main.go client -p 3000 -a 0.0.0.0 --script sleep --script 1 -t 2000
 
-[Linux || Mac]
+**[Linux || Mac]**
 echo -e '{ "command": ["sleep","1"], "timeout": 2000 }' | nc 127.0.0.1 3000
 
-[Windows]
+**[Windows]**
 ./build/sumologic_server.exe client -p 3000  --script "build/sumologic_server.exe" --script "await" --script "-t" --script "1000" -t 3000
 ``` 
