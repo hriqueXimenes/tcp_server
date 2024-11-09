@@ -30,6 +30,47 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 - [ ] Add documentation to explain the division of folders and explanations of modules.
 - [ ] Create a list of "next improvements" to provide evaluators with a direction on how the project could evolve.
 
+## Layout
+
+```tree
+├── README.md
+├── .gitignore
+├── docker-compose.yaml
+├── Dockerfile
+├── main.go
+├── build
+│   ├── sumologic_server
+│   └── sumologic_server.exe
+├── cmd
+│   ├── server.go
+│   ├── client.go
+│   ├── await.go
+│   └── cmd.go
+├── common
+│   └── common.go
+├── scripts
+│   ├── build.sh
+│   └── integration_test.sh.sh
+└── server
+    ├── models
+    │   ├── taskRequest.go
+    │   └── taskResult.go
+    ├── listener.go
+    ├── network.go
+    └── server.go
+```
+
+A brief description of the layout:
+
+* `README.md` is a detailed description of the project.
+* `docker-compose.yaml` is to hold build outputs.
+* `Dockerfile` is to hold build outputs.
+* `build` is to hold build outputs.
+* `cmd` is where the files that manage the application's commands are located.
+* `common` is where auxiliary functions or language functions are wrapped in interfaces to facilitate unit testing
+* `scripts` contains scripts to build and test the project.
+* `server` where all the TCP server logic is present.
+
 ## Technologies Used
 
 - **Language**: Go 1.22.6
