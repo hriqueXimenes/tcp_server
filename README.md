@@ -113,4 +113,30 @@ To install and configure the project, follow the steps below:
 ```
 3. Run Server TCP
 ```bash
-go run main.go server -p 3000 -a localhost
+-p <port> -a <addr> -m <max-connections>
+
+[Running with GO]
+go run main.go server -p 3000 -a 0.0.0.0 -m 5
+
+[Linux]
+./build/sumologic_server server -p 3000 -a 0.0.0.0 -m 5
+
+[Windows]
+./build/sumologic_server.exe server -p 3000 -a 0.0.0.0 -m 5
+
+[Docker Compose]
+docker-compose up
+```
+4. Perform requests
+```bash
+-p <port> -a <addr> -t <timeout>
+
+[Running with GO]
+go run main.go client -p 3000 -a 0.0.0.0 --script sleep --script 1 -t 2000
+
+[Linux]
+echo -e '{ "command": ["sleep","1"], "timeout": 2000 }' | nc 127.0.0.1 3000
+
+[Windows]
+./build/sumologic_server.exe client -p 3111  --script "build/sumologic_server.exe" --script "await" --script "-t" --script "1000" -t 3000
+``` 
