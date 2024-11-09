@@ -22,9 +22,11 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 
 - [x] Added a Client to facilitate evaluator testing.
 - [x] Added an option to create a TCP server on different ports using the -p flag.
+- [x] Create a build script to generate binary files of the application.
+- [x] Create a script to run integration_tests to test paralelism and real world scenarios.
 - [ ] Create a design for the solution to facilitate presentation and understanding for the evaluators.
 - [x] Create a Docker environment to eliminate any chance of incompatibility on the evaluators' computers.
-- [ ] Create a configurable limit to accept a predefined limit of concurrent requests.
+- [x] Create a configurable limit to accept a predefined limit of concurrent requests.
 - [ ] Add documentation to explain the division of folders and explanations of modules.
 - [ ] Create a list of "next improvements" to provide evaluators with a direction on how the project could evolve.
 

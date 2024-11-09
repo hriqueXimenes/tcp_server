@@ -17,16 +17,19 @@ func TestNewServer_SUCCESS(t *testing.T) {
 	port := randomPort()
 	address := "localhost"
 	protocol := "tcp"
+	maxConn := 10
 
 	server, err := NewServer(ServerConfig{
 		Port:     port,
 		Addr:     address,
 		Protocol: protocol,
+		MaxConn:  maxConn,
 	})
 
 	assert.Equal(t, port, server.port, "Port should be equal to server config")
 	assert.Equal(t, address, server.addr, "Addr should be equal to server config")
 	assert.Equal(t, protocol, server.protocol, "Protocol should be equal to server config")
+	assert.Equal(t, maxConn, server.maxConn, "MaxConnections should be equal to server config")
 	assert.Nil(t, err, "Error should be nil while creating a new server with valid configurations")
 }
 
@@ -34,15 +37,18 @@ func TestNewServer_SUCCESS_Default_Values(t *testing.T) {
 	port := randomPort()
 	address := "localhost"
 	protocol := ""
+	maxConn := 0
 
 	//test default values
 	server, err := NewServer(ServerConfig{
 		Port:     port,
 		Addr:     address,
 		Protocol: protocol,
+		MaxConn:  maxConn,
 	})
 
 	assert.Equal(t, "tcp", server.protocol, "The default protocol should've been assigned to TCP")
+	assert.Equal(t, 5, server.maxConn, "The default maxConn should've been assigned to 5")
 	assert.Nil(t, err, "Error should be nil while creating a new server with valid configurations")
 }
 

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"net"
 
 	"go.uber.org/zap"
 )
@@ -10,6 +11,7 @@ type Server struct {
 	port     int
 	addr     string
 	protocol string
+	maxConn  int
 
 	network  Network
 	listener Listener
@@ -19,6 +21,7 @@ type ServerConfig struct {
 	Port     int
 	Addr     string
 	Protocol string
+	MaxConn  int
 }
 
 // NewServer create a new instance of server
@@ -27,10 +30,15 @@ func NewServer(config ServerConfig) (*Server, error) {
 		config.Protocol = "tcp"
 	}
 
+	if config.MaxConn <= 0 {
+		config.MaxConn = 5
+	}
+
 	newServer := Server{
 		port:     config.Port,
 		addr:     config.Addr,
 		protocol: config.Protocol,
+		maxConn:  config.MaxConn,
 
 		network: newNetwork(),
 	}
@@ -54,6 +62,7 @@ func (server *Server) Start(ctx context.Context, callback func(ctx context.Conte
 
 	logger.Infow("Server Listening", "Port", server.port, "Protocol", server.protocol, "Address", server.addr)
 
+	var semaphore = make(chan int, server.maxConn)
 	go func() {
 		for {
 			conn, err := server.listener.Accept()
@@ -61,8 +70,13 @@ func (server *Server) Start(ctx context.Context, callback func(ctx context.Conte
 				logger.Warnw("Error accepting connection", "Error", err)
 				continue
 			}
+			semaphore <- 1
+			go func(conn net.Conn) {
+				defer conn.Close()
+				server.network.HandleConnection(ctx, conn, callback)
 
-			go server.network.HandleConnection(ctx, conn, callback)
+				<-semaphore
+			}(conn)
 		}
 	}()
 

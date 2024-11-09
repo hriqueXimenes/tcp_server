@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
-	"path/filepath"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/hriqueXimenes/sumo_logic_server/server"
@@ -24,13 +26,20 @@ var (
 )
 
 func init() {
-	serverCmd.Flags().IntP("port", "p", 3000, "Port for the server to listen on.")
-	serverCmd.Flags().StringP("address", "a", "localhost", "Address for the server to listen on.")
+	serverCmd.Flags().IntP("port", "p", 3000, "Port on which the server will listen.")
+	serverCmd.Flags().StringP("address", "a", "localhost", "Address on which the server will listen.")
+	serverCmd.Flags().IntP("maxconn", "m", 5, "Maximum number of parallel requests that the server can handle at the same time.")
 	rootCmd.AddCommand(serverCmd)
 }
 
 func serverCommandExecute(cmd *cobra.Command, args []string) {
 	port, err := cmd.Flags().GetInt("port")
+	if err != nil {
+		fmt.Println("Error getting port:", err)
+		return
+	}
+
+	maxConn, err := cmd.Flags().GetInt("maxconn")
 	if err != nil {
 		fmt.Println("Error getting port:", err)
 		return
@@ -49,13 +58,21 @@ func serverCommandExecute(cmd *cobra.Command, args []string) {
 	defer logger.Sync()
 	sugar := logger.Sugar()
 
-	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), "logger", sugar))
-	defer cancel()
+	const loggerCtxKey = "logger"
+	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), loggerCtxKey, sugar))
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-signalChan
+		cancel()
+	}()
 
 	newServer, err := server.NewServer(server.ServerConfig{
 		Port:     port,
 		Addr:     address,
 		Protocol: "tcp",
+		MaxConn:  maxConn,
 	})
 
 	if err != nil {
@@ -86,13 +103,6 @@ func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
 	}
 
 	result.Command = request.Command
-	cmdPath, err := filepath.Abs(request.Command[0])
-	if err != nil {
-		result.ExitCode = exitCodeError
-		result.Error = fmt.Sprint("Error getting absolute path: ", err)
-		return result
-	}
-
 	subProcessCtx, cancel := context.WithCancel(context.Background())
 	if request.Timeout > 0 {
 		subProcessCtx, cancel = context.WithTimeout(ctx, time.Duration(request.Timeout)*time.Millisecond)
@@ -100,7 +110,7 @@ func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
 
 	defer cancel()
 
-	cmd := exec.CommandContext(subProcessCtx, cmdPath, request.Command[1:]...)
+	cmd := exec.CommandContext(subProcessCtx, request.Command[0], request.Command[1:]...)
 	output, err := cmd.CombinedOutput()
 
 	duration := time.Since(startTime).Milliseconds()
