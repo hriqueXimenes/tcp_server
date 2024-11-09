@@ -105,7 +105,7 @@ To install and configure the project, follow the steps below:
 
 1. Clone the repository to your local machine:
  ```bash
-   git clone https://github.com/hriqueXimenes/sumo_logic_server.git
+   git clone https://github.com/hriqueXimenes/tcp_server.git
 ```
 2. Install all dependencies:
 ```bash
