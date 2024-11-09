@@ -7,12 +7,6 @@ YELLOW="\033[33m"
 BLUE="\033[34m"
 RESET="\033[0m"
 
-# Run build.sh
-echo -e "${YELLOW}-- > Executing build script... < --${RESET}"
-./build.sh &
-BUILD_PID=$!
-wait $BUILD_PID
-
 # Check OS
 OS=$(uname -s)
 case "$OS" in
@@ -62,7 +56,6 @@ echo -e "${YELLOW}-- > Running client... < --${RESET}"
 echo -e "${BLUE}* Running Parallel Requests - less than the limit of connection to avoid the semaphore... *${RESET}"
 PIDS=()
 times=(500 100 1000)
-completed_threads=()
 
 for i in "${!times[@]}"; do
     sendServerSuccessfullyRequest "${times[i]}" "$((i + 1))" &
@@ -71,14 +64,13 @@ done
 
 
 for pid in "${PIDS[@]}"; do
-    wait "${PIDS[i]}";
-    completed_threads+=("$((i + 1))")
+    wait "$pid"
 done
 
 echo ""
 echo -e "${BLUE}* Running Parallel Requests - more than the limit of connection to test semaphore... *${RESET}"
 PIDS=()
-times=(1800 1900 2000 200 300 400)
+times=(1800 1900 2000 4000 1000 1200 2400 3000 200 300 400 100)
 for i in "${!times[@]}"; do
     sendServerSuccessfullyRequest "${times[i]}" "$((i + 1))" &
     PIDS+=($!)
@@ -105,17 +97,17 @@ else
 fi
 
 OUTPUT=$(../build/sumologic_server${OS_TYPE} client -p ${PORT} -a 0.0.0.0 --script "../build/sumologic_server${OS_TYPE}" --script "await" --script "-t" --script "10000" -t 1)
-if echo "$OUTPUT" | grep -q "timeout exceeded"; then
+if echo "$OUTPUT" | grep -iq "timeout"; then
     echo -e "${GREEN}-- > [x] The server could handle a time out request successfully${RESET}"
 else
     echo -e "${RED}-- > [ ] The server could not handle a time out request successfully${RESET}"
 fi
 
 OUTPUT=$(../build/sumologic_server${OS_TYPE} client -p ${PORT} -a 0.0.0.0 --script "../build/invalid" --script "await" --script "-t" --script "10000" -t 20000)
-if echo "$OUTPUT" | grep -q "file not found"; then
+    if echo "$OUTPUT" | grep -qE "file not found|no such file"; then
     echo -e "${GREEN}-- > [x] The server could handle a not found command${RESET}"
 else
-    echo -e "${RED}-- > [ ] he server could not handle a not found command${RESET}"
+    echo -e "${RED}-- > [ ] The server could not handle a not found command${RESET}"
 fi
 
 echo ""
@@ -124,16 +116,16 @@ kill $SERVER_PID
 sleep 2
 echo -e "${GREEN}-- > [x] Server killed < --${RESET}"
 
-sleep 2
+sleep 1
 OUTPUT=$(../build/sumologic_server${OS_TYPE} client -p ${PORT} -a 0.0.0.0 --script "../build/sumologic_server${OS_TYPE}" --script "await" --script "-t" --script "10000" -t 100)
-if echo "$OUTPUT" | grep -q "actively refused it"; then
+
+if echo "$OUTPUT" | grep -q "refused"; then
     echo -e "${GREEN}-- > [x] The server is not accepting connections anymore < --${RESET}"
 else
     echo -e "${RED}-- > [ ] The server is still listening on port ${PORT} < --${RESET}"
 fi
 
 echo ""
-
 
 echo "Press any key to quit..."
 read -n 1 

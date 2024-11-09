@@ -119,11 +119,11 @@ To install and configure the project, follow the steps below:
 go run main.go server -p 3000 -a 0.0.0.0 -m 5
 
 [Linux]
-chmod 777 ./build
+chmod 777 ./build ./scripts
 ./build/sumologic_server server -p 3000 -a 0.0.0.0 -m 5
 
 [Mac]
-chmod 777 ./build
+chmod 777 ./build ./scripts
 ./build/sumologic_server_mac server -p 3000 -a 0.0.0.0 -m 5
 
 [Windows]
