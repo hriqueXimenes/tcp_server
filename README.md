@@ -46,6 +46,7 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 ├── main.go
 ├── build
 │   ├── sumologic_server
+│   ├── sumologic_server_mac
 │   └── sumologic_server.exe
 ├── cmd
 │   ├── server.go
