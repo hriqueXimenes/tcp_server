@@ -30,9 +30,9 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 - [x] Create a script to run integration_tests to test paralelism and real world scenarios.
 - [x] Create a diagram flow of the application to facilitate presentation and understanding for the evaluators.
 - [x] Create a Docker environment to eliminate any chance of incompatibility on the evaluators' computers.
-- [x] Create a configurable limit to accept a predefined limit of concurrent requests.
+- [x] Create a configurable limit to accept a predefined limit of concurrent requests (-m flag).
 - [x] Add documentation to explain the division of folders and explanations of modules.
-- [ ] Create a list of "next improvements" to provide evaluators with a direction on how the project could evolve.
+- [x] Create a list of "next improvements" to provide evaluators with a direction on how the project could evolve.
 
 ## Layout
 
@@ -146,4 +146,24 @@ echo -e '{ "command": ["sleep","1"], "timeout": 2000 }' | nc 127.0.0.1 3000
 
 **[Windows]**
 ./build/sumologic_server.exe client -p 3000  --script "build/sumologic_server.exe" --script "await" --script "-t" --script "1000" -t 3000
-``` 
+```
+
+## Next Steps for the Project
+
+### Authentication
+Review the process and identify best practices to ensure application security.
+
+### Authorization
+Who can execute the commands? What will these commands be? We need to understand if the server should accept commands based on the client's permission level.
+
+### Persistence Layer
+Will the server be audited? Would it be beneficial to log information about executed commands and instructions received from clients? We need to analyze whether just having an observability layer is sufficient for recording history, or if storing data in a database would also be a good idea.
+
+### Processing Order
+Currently, the server respects a maximum limit of simultaneous connections/processes. As connections are freed, a new connection is accepted, but currently, the order of "waiting" clients is not respected. We need to understand if this is a necessity or not.
+
+### Testing
+At present, only the "Server" component is 100% covered by unit tests. The other components do not have unit tests, as they already have language-based tests or simply implement other already tested packages. In the future, it may be worthwhile to re-evaluate and add unit tests for all components.
+
+### Scalability
+Keeping the operation simple in a single service is advantageous, as it facilitates the creation of new functionalities and maintenance. However, it can make it hard to scale a server that handles both command processing and connection management. It might be beneficial to discuss whether it's worth working with a message queue (like Kafka or any other) along with a service that consumes and executes the commands. This way, it would facilitate scalability and delegate responsibilities across different components.
