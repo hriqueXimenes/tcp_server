@@ -16,4 +16,4 @@ COPY --from=builder /app/main .
 
 EXPOSE 3000
 
-CMD ["./main", "server", "-p", "3008", "-a", "0.0.0.0", "-m", "10"]
+CMD ["./main", "server", "-p", "3000", "-a", "0.0.0.0", "-m", "10"]

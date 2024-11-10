@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bytes"
 	"encoding/json"
 	"net"
 )
@@ -8,6 +9,8 @@ import (
 type Common interface {
 	NewDecoder(conn net.Conn) *json.Decoder
 	Decode(decoder *json.Decoder) (interface{}, error)
+	ReadUntilNewline(conn net.Conn) ([]byte, error)
+
 	Write(conn net.Conn, req []byte) error
 
 	Marshal(v any) ([]byte, error)
@@ -40,4 +43,25 @@ func (common *commonImpl) Write(conn net.Conn, req []byte) error {
 	}
 
 	return nil
+}
+
+func (common *commonImpl) ReadUntilNewline(conn net.Conn) ([]byte, error) {
+	var buf bytes.Buffer
+	for {
+		b := make([]byte, 1)
+		n, err := conn.Read(b)
+		if err != nil {
+			return nil, err
+		}
+		if n == 0 {
+			break
+		}
+
+		buf.Write(b)
+		if b[0] == '\n' {
+			break
+		}
+	}
+
+	return buf.Bytes(), nil
 }

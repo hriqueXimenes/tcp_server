@@ -49,14 +49,16 @@ func (m *mockConn) SetWriteDeadline(t time.Time) error {
 }
 
 type mockCommon struct {
-	shouldReturnErrorOnDecode  bool
-	shouldReturnErrorOnMarshal bool
-	shouldReturnErrorOnWrite   bool
+	shouldReturnErrorOnDecode           bool
+	shouldReturnErrorOnMarshal          bool
+	shouldReturnErrorOnWrite            bool
+	shouldReturnErrorOnReadUntilNewLine bool
 
 	OnNewDecoderCalledCount int
 	OnDecodeCalledCount     int
 	OnMarshalCalledCount    int
 	onWriteCalledCount      int
+	onReadUntilNewline      int
 }
 
 func (m *mockCommon) NewDecoder(conn net.Conn) *json.Decoder {
@@ -76,6 +78,33 @@ func (m *mockCommon) Decode(decoder *json.Decoder) (interface{}, error) {
 	err := decoder.Decode(&request)
 
 	return request, err
+}
+
+func (m *mockCommon) ReadUntilNewline(conn net.Conn) ([]byte, error) {
+	m.onReadUntilNewline++
+
+	if m.shouldReturnErrorOnReadUntilNewLine {
+		return nil, io.EOF
+	}
+
+	var buf bytes.Buffer
+	for {
+		b := make([]byte, 1)
+		n, err := conn.Read(b)
+		if err != nil {
+			return nil, err
+		}
+		if n == 0 {
+			break
+		}
+
+		buf.Write(b)
+		if b[0] == '\n' {
+			break
+		}
+	}
+
+	return buf.Bytes(), nil
 }
 
 func (m *mockCommon) Marshal(v any) ([]byte, error) {

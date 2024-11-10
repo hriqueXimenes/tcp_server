@@ -30,14 +30,13 @@ func (network *networkImpl) HandleConnection(ctx context.Context, conn net.Conn,
 	}
 
 	defer conn.Close()
-	decoder := network.common.NewDecoder(conn)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			request, err := network.common.Decode(decoder)
+			request, err := network.common.ReadUntilNewline(conn)
 			if err != nil {
 				if err == io.EOF {
 					return // Closed connection
@@ -47,15 +46,9 @@ func (network *networkImpl) HandleConnection(ctx context.Context, conn net.Conn,
 				return
 			}
 
-			jsonData, err := network.common.Marshal(request)
-			if err != nil {
-				logger.Errorw("Error on Marshall", "Error", err)
-				return
-			}
+			logger.Infow("Received Request", "Request", string(request))
 
-			logger.Infow("Received Request", "Request", request)
-
-			result := callback(ctx, jsonData)
+			result := callback(ctx, request)
 
 			responseData, err := network.common.Marshal(result)
 			if err != nil {

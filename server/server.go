@@ -70,7 +70,6 @@ func (server *Server) Start(ctx context.Context, callback func(ctx context.Conte
 	}
 
 	logger.Infow("Server Listening", "Port", server.port, "Protocol", server.protocol, "Address", server.addr)
-
 	var semaphore = make(chan int, server.maxConn)
 	go func() {
 		for {

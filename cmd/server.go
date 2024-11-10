@@ -115,7 +115,7 @@ func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
 	result.Command = request.Command
 
 	// Create a context for the subprocess, with an optional timeout
-	subProcessCtx, cancel := context.WithCancel(context.Background())
+	subProcessCtx, cancel := context.WithCancel(ctx)
 	if request.Timeout > 0 {
 		subProcessCtx, cancel = context.WithTimeout(ctx, time.Duration(request.Timeout)*time.Millisecond)
 	}

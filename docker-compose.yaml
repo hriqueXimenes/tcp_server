@@ -7,6 +7,6 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3008:3008"
+      - "3000:3000"
     volumes:
       - ./scripts:/scripts
