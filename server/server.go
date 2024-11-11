@@ -81,6 +81,7 @@ func (server *Server) Start(ctx context.Context, callback func(ctx context.Conte
 			semaphore <- 1
 			go func(conn net.Conn) {
 				defer conn.Close()
+
 				server.network.HandleConnection(ctx, conn, callback)
 
 				<-semaphore

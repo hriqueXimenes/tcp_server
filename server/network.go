@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 
+	"github.com/google/uuid"
 	"github.com/hriqueXimenes/sumo_logic_server/common"
 	"go.uber.org/zap"
 )
@@ -30,6 +31,11 @@ func (network *networkImpl) HandleConnection(ctx context.Context, conn net.Conn,
 	}
 
 	defer conn.Close()
+	ctxHandleConn, cancelCtxHandleConn := context.WithCancel(ctx)
+	correlationID := uuid.New().String()
+	logger = logger.With(zap.String("CID", correlationID))
+
+	defer cancelCtxHandleConn()
 
 	for {
 		select {
@@ -39,7 +45,8 @@ func (network *networkImpl) HandleConnection(ctx context.Context, conn net.Conn,
 			request, err := network.common.ReadUntilNewline(conn)
 			if err != nil {
 				if err == io.EOF {
-					return // Closed connection
+					cancelCtxHandleConn()
+					return
 				}
 
 				logger.Errorw("Error decoding request", "Error", err)
@@ -48,13 +55,15 @@ func (network *networkImpl) HandleConnection(ctx context.Context, conn net.Conn,
 
 			logger.Infow("Received Request", "Request", string(request))
 
-			result := callback(ctx, request)
+			result := callback(ctxHandleConn, request)
 
 			responseData, err := network.common.Marshal(result)
 			if err != nil {
 				logger.Errorw("Error on Marshall Response", "Error", err)
 				return
 			}
+
+			logger.Infow("Return Result", "Result", string(responseData))
 
 			if err := network.common.Write(conn, append(responseData, '\n')); err != nil {
 				logger.Errorw("Error on Sending Response", "Error", err)

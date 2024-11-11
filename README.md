@@ -32,7 +32,8 @@ I hope you like the solutions I applied, and I would be very happy to receive an
 - [x] Create a Docker environment to eliminate any chance of incompatibility on the evaluators' computers.
 - [x] Create a configurable limit to accept a predefined limit of concurrent requests.
 - [x] Add documentation to explain the division of folders and explanations of modules.
-- [ ] Create a list of "next improvements" to provide evaluators with a direction on how the project could evolve.
+- [x] Added correlation ID in logs to track request flow if necessary.
+- [x] Create a list of "next improvements" to provide evaluators with a direction on how the project could evolve.
 
 ## Layout
 
