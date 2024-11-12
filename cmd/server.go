@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -123,7 +125,36 @@ func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
 
 	// Execute the command with the given arguments and capture the output
 	cmd := exec.CommandContext(subProcessCtx, request.Command[0], request.Command[1:]...)
-	output, err := cmd.CombinedOutput()
+	if err := cmd.Start(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			result.ExitCode = exitError.ExitCode()
+		} else {
+			result.ExitCode = exitCodeError
+		}
+
+		result.Error = "Error running command"
+		return result
+	}
+
+	stdoutPipe, _ := cmd.StdoutPipe()
+	stderrPipe, _ := cmd.StderrPipe()
+
+	// Save stdout and stderr in a buffer
+	var stdoutBuf, stderrBuf bytes.Buffer
+	go io.Copy(&stdoutBuf, stdoutPipe)
+	go io.Copy(&stderrBuf, stderrPipe)
+
+	//TODO: Check buffer limit
+	if err := cmd.Wait(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			result.ExitCode = exitError.ExitCode()
+		} else {
+			result.ExitCode = exitCodeError
+		}
+		result.Error = "Command finish with error"
+	}
+
+	output := stdoutBuf.String() + stderrBuf.String()
 
 	// Calculate the duration of command execution
 	duration := time.Since(startTime).Milliseconds()
