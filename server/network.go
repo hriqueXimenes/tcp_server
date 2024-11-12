@@ -31,9 +31,9 @@ func (network *networkImpl) HandleConnection(ctx context.Context, conn net.Conn,
 	}
 
 	defer conn.Close()
-	ctxHandleConn, cancelCtxHandleConn := context.WithCancel(ctx)
 	correlationID := uuid.New().String()
 	logger = logger.With(zap.String("CID", correlationID))
+	ctxHandleConn, cancelCtxHandleConn := context.WithCancel(context.WithValue(context.Background(), "logger", logger))
 
 	defer cancelCtxHandleConn()
 

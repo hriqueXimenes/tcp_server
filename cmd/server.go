@@ -92,23 +92,29 @@ func serverCommandExecute(cmd *cobra.Command, args []string) {
 }
 
 func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
+	// Start logger instance
+	logger, ok := ctx.Value("logger").(*zap.SugaredLogger)
+	if !ok {
+		logger = zap.NewNop().Sugar()
+	}
+
 	// Record the start time for executing the task
 	startTime := time.Now()
 	result := models.TaskResult{}
-	const exitCodeError = -1
+	const exitCodeErrorGeneral = -1
 
 	// Unmarshal the incoming request into a TaskRequest struct
 	var request models.TaskRequest
 	err := json.Unmarshal(req, &request)
 	if err != nil {
-		result.ExitCode = exitCodeError
+		result.ExitCode = exitCodeErrorGeneral
 		result.Error = fmt.Sprintf("Invalid request body: %v", err)
 		return result
 	}
 
 	// Validate that a command is provided in the request
 	if request.Command == nil || len(request.Command) == 0 {
-		result.ExitCode = exitCodeError
+		result.ExitCode = exitCodeErrorGeneral
 		result.Error = "Command is mandatory."
 		return result
 	}
@@ -125,19 +131,33 @@ func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
 
 	// Execute the command with the given arguments and capture the output
 	cmd := exec.CommandContext(subProcessCtx, request.Command[0], request.Command[1:]...)
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		logger.Errorw("Error to create stdoutPipe", "Request", request)
+		result.ExitCode = exitCodeErrorGeneral
+		result.Error = "Unexpected Error"
+		return result
+	}
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		logger.Errorw("Error to create stderrPipe", "Request", request)
+		result.ExitCode = exitCodeErrorGeneral
+		result.Error = "Unexpected Error"
+		return result
+	}
+
 	if err := cmd.Start(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			result.ExitCode = exitError.ExitCode()
 		} else {
-			result.ExitCode = exitCodeError
+			result.ExitCode = exitCodeErrorGeneral
 		}
 
-		result.Error = "Error running command"
+		logger.Errorw("Command started with an error", "Error", err)
+		result.Error = err.Error()
 		return result
 	}
-
-	stdoutPipe, _ := cmd.StdoutPipe()
-	stderrPipe, _ := cmd.StderrPipe()
 
 	// Save stdout and stderr in a buffer
 	var stdoutBuf, stderrBuf bytes.Buffer
@@ -145,16 +165,27 @@ func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
 	go io.Copy(&stderrBuf, stderrPipe)
 
 	//TODO: Check buffer limit
+
+	// Wait for the command to finish
+	result.ExitCode = 0
 	if err := cmd.Wait(); err != nil {
 		if exitError, ok := err.(*exec.ExitError); ok {
-			result.ExitCode = exitError.ExitCode()
+			if status, ok := exitError.Sys().(syscall.WaitStatus); ok {
+				if status.Signaled() {
+					result.Error = "timeout exceeded"
+					result.ExitCode = exitCodeErrorGeneral
+				} else {
+					result.Error = stderrBuf.String()
+					result.ExitCode = exitError.ExitCode()
+				}
+			}
 		} else {
-			result.ExitCode = exitCodeError
+			result.ExitCode = exitCodeErrorGeneral
+			result.Error = stderrBuf.String()
 		}
-		result.Error = "Command finish with error"
-	}
 
-	output := stdoutBuf.String() + stderrBuf.String()
+		logger.Errorw("Command finished with an error", "Error", err)
+	}
 
 	// Calculate the duration of command execution
 	duration := time.Since(startTime).Milliseconds()
@@ -163,19 +194,11 @@ func OnReceiveSignal(ctx context.Context, req []byte) interface{} {
 	result.ExecutedAt = startTime.UnixNano() / int64(time.Millisecond)
 	result.DurationMs = float64(duration)
 
-	// Handle timeout and execution errors
-	if subProcessCtx.Err() == context.DeadlineExceeded {
-		result.ExitCode = exitCodeError
-		result.Error = "timeout exceeded"
-	} else if err != nil {
-		result.ExitCode = exitCodeError
-		result.Error = fmt.Sprintf("Error executing command: %v", err)
-	} else {
-		result.ExitCode = 0
-	}
-
 	// Capture the output of the command execution
-	result.Output = string(output)
+	if result.ExitCode == 0 {
+		output := stdoutBuf.String() + stderrBuf.String()
+		result.Output = string(output)
+	}
 
 	return result
 }
