@@ -1,4 +1,4 @@
-# Sumo Logic Server TCP
+# Server TCP Study
 
 ## Description
 
